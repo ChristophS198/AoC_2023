@@ -1,6 +1,12 @@
 #include <iostream>
 #include "1/sol_1.cpp"
 #include "2/sol_2.cpp"
+#include "3/sol_3.cpp"
+// #include "4/sol_4.cpp"
+// #include "5/sol_5.cpp"
+// #include "6/sol_6.cpp"
+// #include "7/sol_7.cpp"
+// #include "8/sol_8.cpp"
 #include <filesystem>
 
 std::string get_input_file_name(int day)
@@ -22,6 +28,8 @@ int main(int /*argc*/, char** /*argv*/)
     std::cout << sol_1_2(get_input_file_name(1)) << std::endl;
     std::cout << sol_2_1(get_input_file_name(2)) << std::endl;
     std::cout << sol_2_2(get_input_file_name(2)) << std::endl;
+    std::cout << sol_3_1(get_input_file_name(3)) << std::endl;
+    std::cout << sol_3_2(get_input_file_name(3)) << std::endl;
 
 
     return 0;
