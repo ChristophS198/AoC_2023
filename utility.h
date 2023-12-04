@@ -281,13 +281,15 @@ std::vector<T> read_numbers_from_file(const std::string& file_path)
     std::vector<T> number_vec{};
     std::fstream input_file;
     input_file.open(file_path,std::ios::in);
-    if (input_file.is_open()){
+    if (input_file.is_open())
+    {
         std::string input_line;
-        while(getline(input_file, input_line)){  //read data from file object and put it into string.
+        while(getline(input_file, input_line))
+        {
             std::vector<T> num_in_line = parse_string_to_number_vec<T>(input_line);
             number_vec.insert(number_vec.end(),num_in_line.begin(), num_in_line.end());
         }
-        input_file.close();   //close the file object.
+        input_file.close();   
     }
     return number_vec;
 }
@@ -339,12 +341,14 @@ std::vector<std::vector<T>> read_2d_vec_from_file(const std::string& file_path)
     std::vector<std::vector<T>> number_vec_2d{};
     std::fstream input_file;
     input_file.open(file_path,std::ios::in);
-    if (input_file.is_open()){
+    if (input_file.is_open())
+    {
         std::string input_line;
-        while(getline(input_file, input_line)){  //read data from file object and put it into string.
+        while(getline(input_file, input_line))
+        {
             number_vec_2d.push_back(parse_to_single_digits<T>(input_line));
         }
-        input_file.close();   //close the file object.
+        input_file.close();
     }
     return number_vec_2d;
 }
@@ -362,7 +366,7 @@ std::vector<std::vector<char>> read_2d_vec_from_file(const std::string& file_pat
         {  
             char_vec_2d.push_back(std::vector<char>(input_line.begin(), input_line.end()));
         }
-        input_file.close();   //close the file object.
+        input_file.close();
     }
     return char_vec_2d;
 }
@@ -378,12 +382,14 @@ std::vector<std::string> read_string_vec_from_file(const std::string& file_path)
     std::vector<std::string> string_vec{};
     std::fstream input_file;
     input_file.open(file_path,std::ios::in);
-    if (input_file.is_open()){
+    if (input_file.is_open())
+    {
         std::string input_line;
-        while(getline(input_file, input_line)){  //read data from file object and put it into string.
+        while(getline(input_file, input_line))
+        {
             string_vec.push_back(input_line);
         }
-        input_file.close();   //close the file object.
+        input_file.close();
     }
     return string_vec;
 }
