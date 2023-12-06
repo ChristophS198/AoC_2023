@@ -3,6 +3,7 @@
 
 build
 Templates
+test.py
 .vscode
 *~
 *.autosave

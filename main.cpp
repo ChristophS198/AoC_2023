@@ -4,7 +4,7 @@
 #include "3/sol_3.cpp"
 #include "4/sol_4.cpp"
 #include "5/sol_5.cpp"
-// #include "6/sol_6.cpp"
+#include "6/sol_6.cpp"
 // #include "7/sol_7.cpp"
 // #include "8/sol_8.cpp"
 #include <filesystem>
@@ -34,6 +34,8 @@ int main(int /*argc*/, char** /*argv*/)
     std::cout << sol_4_2(get_input_file_name(4)) << std::endl;
     std::cout << sol_5_1(get_input_file_name(5)) << std::endl;
     std::cout << sol_5_2(get_input_file_name(5)) << std::endl;
+    std::cout << sol_6_1(get_input_file_name(6)) << std::endl;
+    std::cout << sol_6_2(get_input_file_name(6)) << std::endl;
 
 
     return 0;
