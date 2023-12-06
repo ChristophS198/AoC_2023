@@ -120,3 +120,6 @@ In the above example, the lowest location number can be obtained from seed numbe
 
 Consider all of the initial seed numbers listed in the ranges on the first line of the almanac. What is the lowest location number that corresponds to any of the initial seed numbers?
 
+Your puzzle answer was **11554135**
+
+Both parts of this puzzle are complete! They provide two gold stars: **

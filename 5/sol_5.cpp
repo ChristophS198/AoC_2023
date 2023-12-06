@@ -11,7 +11,7 @@ using PlantNum = std::uint64_t;
 struct PlantRange
 {
     PlantNum start_val;
-    PlantNum len;
+    PlantNum end_val;
 };
 
 class PlantingMap 
@@ -60,7 +60,6 @@ int sol_5_2(const std::string &file_path)
 {
     InputDataDay5_2 data_in = get_planting_maps_2(file_path);
 
-    // too low: 4029012
     return get_lowest_seed_location(data_in);
 }
 
@@ -83,16 +82,16 @@ PlantNum get_lowest_seed_location(const InputDataDay5_2 &input_data)
             for (auto &range : mapped_ranges)
             {
                 std::vector<PlantRange> tmp_ranges = cur_mapping.get_mapped_ranges(range);
-                for (auto new_range : tmp_ranges)
-                {
-                    if (new_range.start_val < min_location) min_location = new_range.start_val;
-
-                }
                 new_mapped_ranges.insert(new_mapped_ranges.begin(), tmp_ranges.begin(), tmp_ranges.end());
             }
 
             cur_name = nxt_target_type_name;
             mapped_ranges = new_mapped_ranges;
+        }
+        for (auto new_range : mapped_ranges)
+        {
+            if (new_range.start_val < min_location) min_location = new_range.start_val;
+
         }
 
     }
@@ -105,83 +104,58 @@ PlantNum get_lowest_seed_location(const InputDataDay5_2 &input_data)
 std::vector<PlantRange> PlantingMap::get_mapped_ranges(PlantRange src_range) const
 {
     std::vector<PlantRange> mapped_ranges;
-    // map is sorted in ascending order -> the key before result of upper_bound() is the interesting one
 
-    while (true) // end is that remaining src_range falls completely in one mapping or is completely outside a mapping
+    while (src_range.start_val < src_range.end_val) 
     {
-        if (src_range.len == 0) return mapped_ranges;
         PlantRange new_mapped_range{};
+        // map is sorted in ascending order -> the key before result of upper_bound() is the interesting one
         auto upper_range = src_range_map.upper_bound(src_range.start_val);
 
         if (upper_range != src_range_map.begin())
         {
-            // src_range.start_val is either inside a mapped range or in between two mapped ranges or starting inside the last range mapping
             auto lower_range = upper_range;
             --lower_range;
             auto mapping_len = lower_range->second.second;
+            auto mapping_end_val = lower_range->first + mapping_len-1;
             auto dst_start = lower_range->second.first;
             auto mapping_start = lower_range->first;
 
-            if (src_range.start_val < mapping_start + mapping_len) // src_range.start_val is a mapped value
+            if (src_range.start_val < mapping_end_val) // src_range.start_val is a mapped value
             {
-                // calc start of mapped range
-                auto mapped_start = get_mapped_num(src_range.start_val);
-                if (src_range.start_val + src_range.len < mapping_start + mapping_len)
-                {
-                    // src_range is completely inside current mapping
-                    mapped_ranges.push_back({ mapped_start, src_range.len});
-                    return mapped_ranges;
-                }
-                else
-                {
-                    // src_range exceeds current mapping -> new range ends where mapping ends
-                    auto new_mapping_len = mapping_start + mapping_len - src_range.start_val;
-                    mapped_ranges.push_back({ mapped_start, new_mapping_len });
-                    // adapt src_range
-                    src_range.start_val = mapped_start + new_mapping_len;
-                    src_range.len -= new_mapping_len;
-                }
+                // map start value
+                new_mapped_range.start_val = dst_start + (src_range.start_val - mapping_start);
+                // end value is the smaller value of either mapping range or src_range
+                auto src_end_val = src_range.end_val < mapping_end_val ? src_range.end_val : mapping_end_val;
+                new_mapped_range.end_val = dst_start + (src_end_val - mapping_start);
+                mapped_ranges.push_back(new_mapped_range);
+                // adapt src_range.start_val
+                src_range.start_val = src_end_val+1;
             }
             else
-            {
-                // src_range.start_val is not a mapped value, but in between two maps -> end of new range is either end of current src_range or start of next mapping
-                if (upper_range == src_range_map.end() || src_range.start_val + src_range.len < upper_range->first)
+            { // src_range is not inside lower_range but starts after lower_range and before upper_range (might be end())
+                if (upper_range == src_range_map.end()) // src_range starts after any mapping range
                 {
                     mapped_ranges.push_back(src_range);
                     return mapped_ranges;
                 }
-                else
-                { // create a new mapped range starting from src_range.start_val and ending at start_of_src_mapping 
-                    auto start_of_next_src_mapping = upper_range->first;
-                    auto mapped_start = src_range.start_val;
-                    auto new_mapping_len = start_of_next_src_mapping - src_range.start_val;
-                    mapped_ranges.push_back({ mapped_start, new_mapping_len });
-                    // adapt src_range
-                    src_range.start_val = start_of_next_src_mapping;
-                    src_range.len -= new_mapping_len;
-                }
+                new_mapped_range.start_val = src_range.start_val;
+
+                // end is the smaller value of either 
+                auto src_end_val = src_range.end_val < upper_range->first ? src_range.end_val : upper_range->first-1;
+                new_mapped_range.end_val = src_end_val;
+                mapped_ranges.push_back(new_mapped_range);
+                src_range.start_val = src_end_val+1;
             }
         }
         else
         {
             // src_range.start_val is before any mapping ranges -> end of new range is either end of current src_range or start of a mapping
-            auto start_of_src_mapping = upper_range->first;
-            if (src_range.start_val + src_range.len < start_of_src_mapping)
-            {
-                mapped_ranges.push_back(src_range);
-                return mapped_ranges;
-            }
-            else
-            { // create a new mapped range starting from src_range.start_val and ending at start_of_src_mapping 
-                auto mapped_start = src_range.start_val;
-                auto new_mapping_len = start_of_src_mapping - src_range.start_val;
-                mapped_ranges.push_back({ mapped_start, new_mapping_len });
-                // adapt src_range
-                src_range.start_val = start_of_src_mapping;
-                src_range.len -= new_mapping_len;
-            }
+            new_mapped_range.start_val = src_range.start_val;
+            auto src_end_val = src_range.end_val < upper_range->first ? src_range.end_val : upper_range->first-1;
+            new_mapped_range.end_val = src_end_val;
+            mapped_ranges.push_back(new_mapped_range);
+            src_range.start_val = src_end_val+1;
         }
-
     }
 
     return mapped_ranges;
@@ -270,7 +244,7 @@ InputDataDay5_2 get_planting_maps_2(const std::string &file_path)
         auto seed_nums = parse_string_to_number_vec<PlantNum>(input_line);
         for (int i=0; i<seed_nums.size(); i+=2)
         {
-            input_data.seed_ranges.push_back(PlantRange{seed_nums[i], seed_nums[i+1]});
+            input_data.seed_ranges.push_back(PlantRange{seed_nums[i], seed_nums[i]+seed_nums[i+1]-1});
         }
         getline(input_file, input_line); // next line is empty
 
