@@ -109,4 +109,6 @@ After unfolding, adding all of the possible arrangement counts together produces
 
 Unfold your condition records; what is the new sum of possible arrangement counts?
 
-Answer: 
+Your puzzle answer was **65607131946466**
+
+Both parts of this puzzle are complete! They provide two gold stars: **
