@@ -1,0 +1,121 @@
+#include <string>
+#include <array>
+#include <map>
+#include <numeric>
+
+#include "../utility.h"
+
+using TComb = std::uint64_t;
+
+constexpr char SPRING{ '.' };
+constexpr char DAMAGED_SPRING{ '#' };
+constexpr char UNKNOWN_SPRING{ '?' };
+
+struct ConditionRecord
+{
+    std::string springs;
+    std::vector<int> groups; 
+};
+
+std::vector<ConditionRecord> get_records(const std::string &file_path);
+TComb get_comb_dp(const std::string &springs, int pos, const std::vector<int> &groups, int g_pos, int cur_count);
+TComb get_comb_dp(const std::string &springs, int pos, const std::vector<int> &groups, int g_pos, int cur_count, TComb *memo_3d);
+std::vector<ConditionRecord> unfold_records(const std::vector<ConditionRecord> &records);
+
+int sol_12_1(const std::string &file_path)
+{
+    std::vector<ConditionRecord> records = get_records(file_path);
+    TComb combs{ 0ull };
+
+    for (const auto &rec : records)
+    {
+        combs += get_comb_dp(rec.springs, 0, rec.groups, 0, 0);
+    }
+
+    return combs;
+}
+
+
+int sol_12_2(const std::string &file_path)
+{
+    std::vector<ConditionRecord> records = get_records(file_path);
+    records = unfold_records(records);
+    TComb combs{ 0ull };
+    int i{ 0 };
+    for (const auto &rec : records)
+    {
+        combs += get_comb_dp(rec.springs, 0, rec.groups, 0, 0);
+        std::cout << i << ": " << combs << std::endl;
+        ++i;
+    }
+
+    return combs;
+}
+
+
+TComb get_comb_dp(const std::string &springs, int pos, const std::vector<int> &groups, int g_pos, int cur_count)
+{
+    // check for validity
+    if (g_pos == groups.size() && cur_count > 0) return 0;
+    if (cur_count > 0 && cur_count > groups[g_pos]) return 0;
+    if (pos == springs.size())
+    {
+        if (g_pos == groups.size() && cur_count == 0 || g_pos == (groups.size()-1) && cur_count==groups[g_pos])
+        {
+            return 1; // valid case
+        }
+        else return 0;
+    }
+    TComb r1{ 0 };
+    if (springs[pos] == SPRING || springs[pos] == UNKNOWN_SPRING)
+    {
+        if (cur_count > 0) // end current group
+        {
+            if (cur_count == groups[g_pos]) r1 = get_comb_dp(springs, pos+1,groups,g_pos+1,0);
+        }
+        else // no group was active
+        {
+            r1 = get_comb_dp(springs, pos+1,groups,g_pos,0);
+        }
+    }
+    TComb r2{ 0 };
+    if (springs[pos] == DAMAGED_SPRING || springs[pos] == UNKNOWN_SPRING)
+    {
+        r2 = get_comb_dp(springs, pos+1,groups,g_pos,cur_count+1);
+    }
+    return r1 + r2;
+}
+
+std::vector<ConditionRecord> unfold_records(const std::vector<ConditionRecord> &records)
+{
+    std::vector<ConditionRecord> new_records{ records };
+
+    for (size_t r=0; r<new_records.size(); ++r)
+    {
+        for (int i=0; i<4; ++i)
+        {
+            new_records[r].groups.insert(new_records[r].groups.begin(), records[r].groups.begin(), records[r].groups.end());
+            new_records[r].springs += UNKNOWN_SPRING + records[r].springs;
+        }
+        std::cout << new_records[r].springs << std::endl;
+    }
+
+    return new_records;
+}
+
+std::vector<ConditionRecord> get_records(const std::string &file_path)
+{
+    std::vector<ConditionRecord> records;
+
+    std::vector<std::string> str_vec = read_string_vec_from_file(file_path);
+    for (const auto &line : str_vec)
+    {
+        ConditionRecord new_record{ };
+        auto spring_group_split = split_string(line," ");
+        new_record.springs = spring_group_split[0];
+        new_record.groups = parse_string_to_number_vec<int>(spring_group_split[1]);
+        records.push_back(new_record);
+    }
+
+    return records;
+}
