@@ -10,9 +10,9 @@
 // #include "9/sol_9.cpp"
 // #include "10/sol_10.cpp"
 // #include "11/sol_11.cpp"
-#include "12/sol_12.cpp"
+// #include "12/sol_12.cpp"
 // #include "13/sol_13.cpp"
-// #include "14/sol_14.cpp"
+#include "14/sol_14.cpp"
 // #include "15/sol_15.cpp"
 #include <filesystem>
 
@@ -50,9 +50,13 @@ int main(int /*argc*/, char** /*argv*/)
     std::cout << sol_10_2(get_input_file_name(10)) << std::endl;
     std::cout << sol_11_1(get_input_file_name(11)) << std::endl;
     std::cout << sol_11_2(get_input_file_name(11)) << std::endl;
-    */
     std::cout << sol_12_1(get_input_file_name(12)) << std::endl;
     std::cout << sol_12_2(get_input_file_name(12)) << std::endl;
+    std::cout << sol_13_1(get_input_file_name(13)) << std::endl;
+    std::cout << sol_13_2(get_input_file_name(13)) << std::endl;
+    */
+    std::cout << sol_14_1(get_input_file_name(14)) << std::endl;
+    std::cout << sol_14_2(get_input_file_name(14)) << std::endl;
 
 
     return 0;
