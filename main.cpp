@@ -12,8 +12,12 @@
 // #include "11/sol_11.cpp"
 // #include "12/sol_12.cpp"
 // #include "13/sol_13.cpp"
-#include "14/sol_14.cpp"
-// #include "15/sol_15.cpp"
+// #include "14/sol_14.cpp"
+// day 15 is solved with python
+#include "16/sol_16.cpp"
+// #include "16/sol_16.cpp"
+// #include "16/sol_16.cpp"
+// #include "16/sol_16.cpp"
 #include <filesystem>
 
 std::string get_input_file_name(int day)
@@ -54,9 +58,11 @@ int main(int /*argc*/, char** /*argv*/)
     std::cout << sol_12_2(get_input_file_name(12)) << std::endl;
     std::cout << sol_13_1(get_input_file_name(13)) << std::endl;
     std::cout << sol_13_2(get_input_file_name(13)) << std::endl;
-    */
     std::cout << sol_14_1(get_input_file_name(14)) << std::endl;
     std::cout << sol_14_2(get_input_file_name(14)) << std::endl;
+    */
+    std::cout << sol_16_1(get_input_file_name(16)) << std::endl;
+    std::cout << sol_16_2(get_input_file_name(16)) << std::endl;
 
 
     return 0;
