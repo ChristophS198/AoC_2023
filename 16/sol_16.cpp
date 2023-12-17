@@ -26,6 +26,7 @@ namespace
 
 void trace_light_beam(int row, int col, TDir entering_dir, const TSquare<std::string> &mirr_square, TSquare<std::vector<TDir>> &beam_track_square);
 std::uint32_t count_energized_tiles(const TSquare<std::vector<TDir>> &beam_track_square);
+std::uint32_t get_max_beam_configuration(const TSquare<std::string> &mirr_square);
 template <typename T>
 void print_square(const TSquare<T> &beam_track_square);
 
@@ -41,8 +42,45 @@ int sol_16_1(const std::string &file_path)
 
 int sol_16_2(const std::string &file_path)
 {
+    TSquare<std::string> orig_square = read_string_vec_from_file(file_path);
 
-    return 0;
+    return get_max_beam_configuration(orig_square);
+}
+
+std::uint32_t get_max_beam_configuration(const TSquare<std::string> &mirr_square)
+{
+    std::uint32_t max_energized_tiles{ 0ul };
+    auto r_num{ mirr_square.size() };
+    auto c_num{ mirr_square[0].length() };
+
+    // check all left-side tiles and right-side tiles
+    for (size_t row=0; row<r_num; ++row)
+    {
+        TSquare<std::vector<TDir>> beam_track_square(r_num, std::vector<TDir>(c_num, 0u));
+        trace_light_beam(row,0,LEFT, mirr_square, beam_track_square);
+        auto energized_tiles = count_energized_tiles(beam_track_square);
+        if (energized_tiles > max_energized_tiles) max_energized_tiles = energized_tiles;
+        // check righ side
+        beam_track_square = TSquare<std::vector<TDir>>(r_num, std::vector<TDir>(c_num, 0u));
+        trace_light_beam(row,c_num-1,RIGHT, mirr_square, beam_track_square);
+        energized_tiles = count_energized_tiles(beam_track_square);
+        if (energized_tiles > max_energized_tiles) max_energized_tiles = energized_tiles;
+    }
+    // check all bottom and top tiles
+    for (size_t col=0; col<c_num; ++col)
+    {
+        TSquare<std::vector<TDir>> beam_track_square(r_num, std::vector<TDir>(c_num, 0u));
+        trace_light_beam(0,col,ABOVE, mirr_square, beam_track_square);
+        auto energized_tiles = count_energized_tiles(beam_track_square);
+        if (energized_tiles > max_energized_tiles) max_energized_tiles = energized_tiles;
+        // check beams coming in from bottom
+        beam_track_square = TSquare<std::vector<TDir>>(r_num, std::vector<TDir>(c_num, 0u));
+        trace_light_beam(r_num-1,col,BELOW, mirr_square, beam_track_square);
+        energized_tiles = count_energized_tiles(beam_track_square);
+        if (energized_tiles > max_energized_tiles) max_energized_tiles = energized_tiles;
+    }
+
+    return max_energized_tiles;
 }
 
 /*
