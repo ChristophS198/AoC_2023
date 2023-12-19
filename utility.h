@@ -3,7 +3,13 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <utility>
+#include <chrono>
 
+typedef std::chrono::high_resolution_clock::time_point TimeVar;
+
+#define duration(a) std::chrono::duration_cast<std::chrono::nanoseconds>(a).count()
+#define timeNow() std::chrono::high_resolution_clock::now()
 
 template<typename T>
 struct Point3D
@@ -476,3 +482,18 @@ std::ostream& bold_off(std::ostream& os)
 {
     return os << "\e[0m";
 }
+
+
+template<typename R, typename F, typename... Args>
+std::pair<double,R> funcTime(F func, Args&&... args){
+    TimeVar t1=timeNow();
+    R res = func(std::forward<Args>(args)...);
+    return { duration(timeNow()-t1), res };
+}
+
+// template<typename F, typename... Args>
+// double funcTime(F func, Args&&... args){
+//     TimeVar t1=timeNow();
+//     func(std::forward<Args>(args)...);
+//     return duration(timeNow()-t1);
+// }
