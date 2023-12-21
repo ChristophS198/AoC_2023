@@ -85,4 +85,6 @@ Digging out this loop and its interior produces a lagoon that can hold an impres
 
 Convert the hexadecimal color codes into the correct instructions; if the Elves follow this new dig plan, how many cubic meters of lava could the lagoon hold?
 
-Answer:
+Your puzzle answer was **94116351948493**
+
+Both parts of this puzzle are complete! They provide two gold stars: **

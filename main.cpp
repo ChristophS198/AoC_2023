@@ -65,8 +65,8 @@ int main(int /*argc*/, char** /*argv*/)
     std::cout << sol_17_1(get_input_file_name(17)) << std::endl;
     std::cout << sol_17_2(get_input_file_name(17)) << std::endl;
     */
-    std::cout << Day18::sol_18_1(get_input_file_name(18)) << std::endl;
-    std::cout << Day18::sol_18_2(get_input_file_name(18)) << std::endl;
+    std::wcout << Day18::sol_18_1(get_input_file_name(18)) << std::endl;
+    std::wcout << Day18::sol_18_2(get_input_file_name(18)) << std::endl;
 
 
     return 0;
