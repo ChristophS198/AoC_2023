@@ -71,4 +71,6 @@ In the above example, there are 167409079868000 distinct combinations of ratings
 
 Consider only your list of workflows; the list of part ratings that the Elves wanted you to sort is no longer relevant. How many distinct combinations of ratings will be accepted by the Elves' workflows?
 
-Answer: 
+Your puzzle answer was **136661579897555**
+
+Both parts of this puzzle are complete! They provide two gold stars: **

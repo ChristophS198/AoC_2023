@@ -1,5 +1,5 @@
 #include <string>
-#include <array>
+#include <set>
 #include <unordered_map>
 #include <numeric>
 
@@ -8,11 +8,14 @@
 
 namespace Day19
 {
-
+    struct Range;
+    
     using TWFName = std::string; // workflow name 
     using TCat = int;
     using tDestination = std::string;
     using TPart = std::vector<TCat>;
+    using TComb = std::uint64_t;
+    using WorkflowRange = std::vector<Range>; // each of the 4 categories is represented by a vector of Range objects
 
     std::unordered_map<char,size_t> cat_map{ {'x',0},{'m',1},{'a',2},{'s',3} };
 
@@ -25,13 +28,25 @@ namespace Day19
     struct Workflow
     {
         TWFName name{};
-        std::vector<Rule> rules;
+        std::vector<Rule> rules{};
+    };
+
+    struct Range
+    {
+        int start{};
+        int end{};
+        bool operator<(const Range &r){
+            if (start != r.start) return start < r.start;
+            else return end < r.end;
+        }
     };
 
     std::pair<std::unordered_map<TWFName,Workflow>, std::vector<TPart>> get_data_in(const std::string &file_path);
     std::vector<TPart> get_accepted_parts(const std::unordered_map<TWFName,Workflow> &workflow_map, const std::vector<TPart> &parts);
     bool process_part(const std::unordered_map<TWFName,Workflow> &workflow_map, const TPart &part);
     std::pair<bool,tDestination> check_rule(const Rule &rule, const TPart &part);
+    TComb get_accept_comb(const std::unordered_map<TWFName,Workflow> &workflow_map);
+    std::pair<TComb,WorkflowRange> intersect_rule(const std::unordered_map<TWFName,Workflow> &workflow_map, const Rule &rule, const WorkflowRange &range);
 
     TCat sol_19_1(const std::string &file_path)
     {
@@ -49,10 +64,134 @@ namespace Day19
     }
 
 
-    TCat sol_19_2(const std::string &file_path)
+    TComb sol_19_2(const std::string &file_path)
     {
+        auto data_in = get_data_in(file_path);
+        std::unordered_map<TWFName,Workflow> workflow_map = data_in.first;
+        
+        return get_accept_comb(workflow_map);
+    }
 
-        return 0;
+    TComb get_comb(const WorkflowRange &range)
+    {
+        TComb comb{ 1 };
+        for (const auto &r : range)
+        {
+            comb *= (r.end - r.start + 1); 
+        }
+        return comb;
+    }
+
+    std::pair<TComb,WorkflowRange> process_workflow(const std::unordered_map<TWFName,Workflow> &workflow_map, const Workflow &wf, const WorkflowRange &range)
+    {
+        TComb accepted{ 0 };
+        WorkflowRange cur_range{ range };
+        for (const auto &r : wf.rules)
+        {
+            auto acc_comb_outside = intersect_rule(workflow_map,r,cur_range);
+            accepted += acc_comb_outside.first;
+            cur_range = acc_comb_outside.second;
+        }
+
+        return { accepted, cur_range };
+    }
+
+    std::pair<TComb,WorkflowRange> intersect_rule(const std::unordered_map<TWFName,Workflow> &workflow_map, const Rule &rule, const WorkflowRange &range)
+    {
+        WorkflowRange inside{ range };
+        WorkflowRange outside{ {0,0},{0,0},{0,0},{0,0} };
+
+        // 1. set inside and outside ranges based on current range + rule
+        if (rule.rule == "")
+        {
+            inside = range;
+        }
+        else
+        {
+            size_t cat = cat_map.at(rule.rule[0]);
+            auto comp_val = std::stoi(rule.rule.substr(2));
+            auto &cur_range = inside[cat];
+            switch (rule.rule[1])
+            {
+            case '<':
+                if (cur_range.start >= comp_val) 
+                { // all remaining combinations are mapped to outside
+                    outside = range;
+                }
+                else 
+                {
+                    if (cur_range.end < comp_val) inside = range;
+                    else
+                    {
+                        // create two ranges that are split at comp_val
+                        inside = range;
+                        outside = range;
+                        inside[cat].end = comp_val-1;
+                        outside[cat].start = comp_val;
+                    }
+                }
+                break;
+            case '>':
+                if (cur_range.end <= comp_val) 
+                { // all remaining combinations are mapped to outside
+                    outside = range;
+                }
+                else 
+                {
+                    if (cur_range.start > comp_val) inside = range;
+                    else
+                    {
+                        // create two ranges that are split at comp_val
+                        inside = range;
+                        outside = range;
+                        inside[cat].start = comp_val+1;
+                        outside[cat].end = comp_val;
+                    }
+                }
+                break;
+            
+            default:
+                throw std::runtime_error("intersect_rule: Error unknown operator in: " + rule.rule);
+                break;
+            }
+        }
+
+        // 2. inside and outside ranges are set -> return if destination of rule is either "A" or "R"
+        // or recurse further by being directed to the next workflow
+        if (rule.dest == "A") 
+        {
+            return { get_comb(inside), outside };
+        }
+        else
+        {
+            if (rule.dest == "R")
+            {
+                return { 0,outside };
+            }
+            else 
+            {
+                auto nxt_workflow = workflow_map.at(rule.dest);
+                // all of the "inside" combinations are tracked further down in the tree
+                auto res = process_workflow(workflow_map, nxt_workflow,inside);
+
+                // return all accepted combinations + the remaining unhandled ranges
+                return { res.first, outside };
+            }
+        }
+    }
+
+
+    /*
+    Use a recursive function process_workflow that starts with the "in" workflow and then iteratively processes
+    each of its rule. If a rule targets another workflow the recursive process_workflow is called again
+    */
+    TComb get_accept_comb(const std::unordered_map<TWFName,Workflow> &workflow_map)
+    {
+        Range max_range{ 1,4000 };
+        WorkflowRange start_range{ { max_range,max_range,max_range,max_range }};
+        auto res = process_workflow(workflow_map, workflow_map.at("in"),start_range);
+
+        return res.first;
     }
 
     std::pair<bool,tDestination> check_rule(const Rule &rule, const TPart &part)
