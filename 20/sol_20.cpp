@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <queue>
 #include <memory>
+#include <numeric>
 
 #include "../utility.h"
 
@@ -32,6 +33,7 @@ namespace Day20
         virtual Pulse process_pulse(const Pulse &pulse);
         virtual void add_input(const std::string &name) { ; }
         virtual void print_state() const { ; }
+        virtual std::vector<std::string> get_targets() const { return targets; }
         Module(const std::string &n, const std::vector<std::string> &t) : name{n}, targets{t} {};
         virtual ~Module() = default;
     protected:
@@ -45,6 +47,7 @@ namespace Day20
         FlipFlop(const std::string &n, const std::vector<std::string> &t) : Module(n,t) {};
         void print_state() const override { ; }
         void add_input(const std::string &name) override { ; }
+        std::vector<std::string> get_targets() const override { return targets; }
         Pulse process_pulse(const Pulse &pulse) override;
         virtual ~FlipFlop() = default;
     private:
@@ -57,6 +60,7 @@ namespace Day20
         Conjunction(const std::string &n, const std::vector<std::string> &t) : Module(n,t) {};
         void add_input(const std::string &name) override { memory[name] = EPulseType::Low; }
         void print_state() const override;
+        std::vector<std::string> get_targets() const override { return targets; }
         Pulse process_pulse(const Pulse &pulse) override;
         virtual ~Conjunction() = default;
     private:
@@ -72,8 +76,8 @@ namespace Day20
     };
 
     struct PulseCnt{
-        int LowCnt{};
-        int HighCnt{};
+        uint32_t LowCnt{};
+        uint32_t HighCnt{};
     };
 
     class ModuleConfig
@@ -81,8 +85,11 @@ namespace Day20
     public:
         std::pair<PulseCnt,bool> get_pulse_num_after_button_press(size_t cnt);
         ModuleConfig(const std::vector<std::string> &data_in);
+        std::unordered_map<std::string,std::pair<EPulseType,std::vector<size_t>>> track_changes(size_t btn_presses, const std::vector<std::string> &tracked_modules);
+        std::vector<std::string> get_inputs(const std::string &m) const;
     private:
         std::unordered_map<std::string,TModPtr> mod_map;
+        std::unordered_map<std::string,std::pair<EPulseType,std::vector<size_t>>> change_tracker; // this map tracks for multiple Modules the button presses that lead to a change in their output
     };
 
     int sol_20_1(const std::string &file_path)
@@ -101,22 +108,76 @@ namespace Day20
     }
 
 
+    /*
+    The module configuration states that rx is a unique output of a conjunction module -> we need to find the button press that will 
+    lead to all inputs of this conjunction module to be High. 
+    This is achieved by tracking the number of button presses that will lead to a High pulse for each conjunction input.
+    After analysing this data, one can see that (at least for my input) this resulted in 4 modules to be tracked and they always transmitted a high
+    pulse after a cyclic number of button presses. In the same cycle the High pulse is also followed by a low pulse -> we need to find the least common
+    multiple (lcm) of all High pulse cycle counts
+    */
     size_t sol_20_2(const std::string &file_path)
     {
         auto data_in = read_string_vec_from_file(file_path);
         ModuleConfig mod_config(data_in);
-        PulseCnt pulse_nums{ 0,0 };
-        size_t i{ 0ul };
-        for (; i<1'000'000; ++i)
+        
+        std::vector<std::string> rx_in = mod_config.get_inputs("rx");
+        std::vector<std::string> rx_remote_in;
+        for (const auto &in : rx_in)
         {
-            auto res = mod_config.get_pulse_num_after_button_press(i);
-            if (res.second) 
-            {
-                break;
-            }
+            auto res = mod_config.get_inputs(in);
+            rx_remote_in.insert(rx_remote_in.end(), res.begin(), res.end());
+        }
+        auto tracker = mod_config.track_changes(100'000, rx_remote_in);
+
+        // calc least common multiple of the respective cycle times
+        std::uint64_t lcm_res{ 1 };
+        for (const auto &track : tracker)
+        {
+            lcm_res = std::lcm(lcm_res,track.second.second[1]+1); // +1 is added since cycles are counted from 0 onwards
         }
 
-        return i;
+        return lcm_res;
+    }
+
+    std::unordered_map<std::string,std::pair<EPulseType,std::vector<size_t>>> ModuleConfig::track_changes(size_t btn_presses, const std::vector<std::string> &tracked_modules) 
+    {
+        change_tracker.clear();
+        for (const auto &mod : tracked_modules)
+        {
+            change_tracker[mod].first = EPulseType::Low;
+            change_tracker[mod].second = { 0 };
+        }
+        for (size_t i; i<btn_presses; ++i)
+        {
+            Pulse start_pulse{ "Button",EPulseType::Low,{ "broadcaster" } };
+            std::queue<Pulse> unprocessed_pulses;
+            unprocessed_pulses.push(start_pulse);
+
+            while (!unprocessed_pulses.empty())
+            {
+                auto nxt_pulse = unprocessed_pulses.front();
+                unprocessed_pulses.pop();
+
+                // compare with tracker
+                auto it = change_tracker.find(nxt_pulse.src);
+                if (it != change_tracker.end() && nxt_pulse.type != it->second.first)
+                {
+                    it->second.second.push_back(i);
+                    it->second.first = nxt_pulse.type;
+                }
+
+                for (const auto &target : nxt_pulse.targets)
+                {
+                    if (target == "output") continue;
+                    if (target == "rx") continue;
+
+                    auto new_pulse = mod_map.at(target)->process_pulse(nxt_pulse);
+                    unprocessed_pulses.push(new_pulse);
+                }
+            }
+        }
+        return change_tracker;
     }
 
 
@@ -135,35 +196,35 @@ namespace Day20
             auto nxt_pulse = unprocessed_pulses.front();
             unprocessed_pulses.pop();
 
-            std::string t{ "High" };
-            if (nxt_pulse.type == EPulseType::Low) t = "Low";
-
             for (const auto &target : nxt_pulse.targets)
             {
-                // std::cout << nxt_pulse.src << " " << t << " -> " << target << std::endl; 
-
                 // increase respective pulse counter
                 if (nxt_pulse.type == EPulseType::High) ++num_high_pulses;
                 else ++num_low_pulses;
 
+                // skip special pulse targets -> they do not exist in mod_map
                 if (target == "output") continue;
-                if (target == "rx")
-                {
-                    rx_low_received = nxt_pulse.type == EPulseType::Low;
-                    continue;
-                }
+                if (target == "rx") continue;
+
                 auto new_pulse = mod_map.at(target)->process_pulse(nxt_pulse);
                 unprocessed_pulses.push(new_pulse);
-                if ("nc" == target && nxt_pulse.type == EPulseType::High) 
-                {
-                    std::cout << cnt << std::endl;
-                    mod_map.at("nc")->print_state();
-                }
-
             }
         }
 
-        return { { num_low_pulses,num_high_pulses }, rx_low_received };
+        return { PulseCnt{ num_low_pulses,num_high_pulses }, rx_low_received };
+    }
+
+    std::vector<std::string> ModuleConfig::get_inputs(const std::string &m) const
+    {
+        std::vector<std::string> inputs;
+        for (const auto & mod : mod_map)
+        {
+            for (const auto &t : mod.second->get_targets())
+            {
+                if (m == t) inputs.push_back(mod.first);
+            }
+        }
+        return inputs;
     }
 
     Pulse Module::process_pulse(const Pulse &pulse)
