@@ -31,9 +31,9 @@ struct Point3D
 template<typename T>
 size_t  Point3D<T>::HashFunction::operator()(const Point3D& pos) const
 {
-    size_t xHash = std::hash<int>()(pos.x);
-    size_t yHash = std::hash<int>()(pos.y) << 1;
-    size_t zHash = std::hash<int>()(pos.z) << 2;
+    size_t xHash = std::hash<T>()(pos.x);
+    size_t yHash = std::hash<T>()(pos.y) << 1;
+    size_t zHash = std::hash<T>()(pos.z) << 2;
     return xHash ^ yHash ^ zHash;
 }
 
@@ -113,7 +113,19 @@ struct Point
     Point() : x{}, y{} {};
     bool operator<(const Point& other) const;
     bool operator==(const Point& other) const;
+    struct HashFunction 
+    {
+        size_t operator()(const Point<T> &p) const;
+    };
 };
+
+template<typename T>
+size_t Point<T>::HashFunction::operator()(const Point<T>& pos) const
+{
+    size_t xHash = std::hash<T>()(pos.x);
+    size_t yHash = std::hash<T>()(pos.y) << 1;
+    return xHash ^ yHash;
+}
 
 template<typename T>
 bool Point<T>::operator<(const Point& other) const
