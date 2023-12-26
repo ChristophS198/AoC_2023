@@ -21,6 +21,7 @@ struct Point3D
     Point3D() : x{}, y{}, z{} {};
     bool operator<(const Point3D& other) const;
     bool operator==(const Point3D& other) const;
+    bool operator!=(const Point3D& other) const;
     T dist_squ() const;
     struct HashFunction 
     {
@@ -64,6 +65,12 @@ template<typename T>
 bool Point3D<T>::operator==(const Point3D& other) const
 {
     return this->x == other.x && this->y == other.y && this->z == other.z;
+}
+
+template<typename T>
+bool Point3D<T>::operator!=(const Point3D& other) const
+{
+    return !(*this == other);
 }
 
 template<typename T>
