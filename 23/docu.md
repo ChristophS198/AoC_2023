@@ -105,4 +105,6 @@ In the example above, this increases the longest hike to 154 steps:
 ```
 Find the longest hike you can take through the surprisingly dry hiking trails listed on your map. How many steps long is the longest hike?
 
-Answer: 
+Your puzzle answer was **6802**
+
+Both parts of this puzzle are complete! They provide two gold stars: **
