@@ -17,12 +17,12 @@ struct Point3D
     T x;
     T y;
     T z;
-    Point3D(const T& x1, const T& y1, const T& z1) : x{x1}, y {y1}, z{z1} {};
-    Point3D() : x{}, y{}, z{} {};
-    bool operator<(const Point3D& other) const;
-    bool operator==(const Point3D& other) const;
-    bool operator!=(const Point3D& other) const;
-    T dist_squ() const;
+    constexpr Point3D(const T& x1, const T& y1, const T& z1) : x{x1}, y {y1}, z{z1} {};
+    constexpr Point3D() : x{}, y{}, z{} {};
+    constexpr bool operator<(const Point3D& other) const;
+    constexpr bool operator==(const Point3D& other) const;
+    constexpr bool operator!=(const Point3D& other) const;
+    constexpr T dist_squ() const;
     struct HashFunction 
     {
         size_t operator()(const Point3D &p) const;
@@ -38,13 +38,13 @@ size_t  Point3D<T>::HashFunction::operator()(const Point3D& pos) const
 }
 
 template<typename T>
-T Point3D<T>::dist_squ() const
+constexpr T Point3D<T>::dist_squ() const
 {
     return x*x + y*y + z*z;
 }
 
 template<typename T>
-bool Point3D<T>::operator<(const Point3D& other) const
+constexpr bool Point3D<T>::operator<(const Point3D& other) const
 {
     if (this->x < other.x)
     {
@@ -62,13 +62,13 @@ bool Point3D<T>::operator<(const Point3D& other) const
 }
 
 template<typename T>
-bool Point3D<T>::operator==(const Point3D& other) const
+constexpr bool Point3D<T>::operator==(const Point3D& other) const
 {
     return this->x == other.x && this->y == other.y && this->z == other.z;
 }
 
 template<typename T>
-bool Point3D<T>::operator!=(const Point3D& other) const
+constexpr bool Point3D<T>::operator!=(const Point3D& other) const
 {
     return !(*this == other);
 }
@@ -79,11 +79,24 @@ Point3D<T> operator-(const Point3D<T> &p1, const Point3D<T> &p2)
     return Point3D<T>{p1.x-p2.x, p1.y-p2.y, p1.z-p2.z};
 }
 
+template<typename T>
+Point3D<T> operator+(const Point3D<T> &p1, const Point3D<T> &p2)
+{
+    return Point3D<T>{p1.x+p2.x, p1.y+p2.y, p1.z+p2.z};
+}
+
 template<typename T, typename R>
 Point3D<T> operator+(const Point3D<T> &p1, const R a)
 {
     T b = static_cast<T>(a);
     return Point3D<T>{ p1.x+b, p1.y+b, p1.z+b };
+}
+
+template<typename T, typename R>
+Point3D<T> operator*(const Point3D<T> &p1, const R a)
+{
+    T b = static_cast<T>(a);
+    return Point3D<T>{ p1.x*b, p1.y*b, p1.z*b };
 }
 
 template<typename T>
